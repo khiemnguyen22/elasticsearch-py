@@ -3623,8 +3623,10 @@ class Elasticsearch(BaseClient):
             __body["explain"] = explain
         if ext is not None:
             __body["ext"] = ext
-        if fields is not None:
-            __body["fields"] = fields
+        # if fields is not None:
+        __body["fields"] = fields
+        print('fields is none? ', fields is None)
+        print('fields values: ', fields)
         if filter_path is not None:
             __query["filter_path"] = filter_path
         if from_ is not None:
@@ -3730,9 +3732,19 @@ class Elasticsearch(BaseClient):
         __headers = {"accept": "application/json"}
         if __body is not None:
             __headers["content-type"] = "application/json"
-        return self.perform_request(  # type: ignore[return-value]
+        
+        result = self.perform_request(  # type: ignore[return-value]
             "POST", __path, params=__query, headers=__headers, body=__body
         )
+        print('result type: ', type(result))
+        hits = result.body["hits"]["hits"]
+        if len(hits) > 0:
+            for hit in hits:
+                if 'fields' not in hit:
+                    hit["fields"] = {}
+                    for field in fields:
+                        hit["fields"][field] = None
+        return result
 
     @_rewrite_parameters(
         body_fields=True,
